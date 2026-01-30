@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 협업 프로젝트 사고 기록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .external-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .external-link {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .external-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .external-link svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* 타임라인 */
+        .timeline {
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -38px;
+            top: 20px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        /* 날짜 헤더 */
+        .date-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .date-header:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+
+        .date-info h2 {
+            font-size: 1.4em;
+            margin-bottom: 5px;
+        }
+
+        .date-meta {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .toggle-icon {
+            font-size: 1.5em;
+            transition: transform 0.3s;
+        }
+
+        .timeline-item.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        /* 기본 정보 섹션 */
+        .basic-info {
+            background: #f8f9fa;
+            padding: 20px 25px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        /* AI 탭 */
+        .ai-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .ai-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .ai-tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .ai-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .ai-tab-content {
+            display: none;
+            padding: 25px;
+        }
+
+        .ai-tab-content.active {
+            display: block;
+        }
+
+        /* 섹션 스타일 */
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h3 {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 1.3em;
+        }
+
+        .section-content {
+            color: #495057;
+            line-height: 1.8;
+        }
+
+        .section-content ul {
+            padding-left: 25px;
+            margin-top: 10px;
+        }
+
+        .section-content li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 3px solid #ffc107;
+        }
+
+        .warning {
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 3px solid #dc3545;
+        }
+
+        .success {
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 3px solid #28a745;
+        }
+
+        /* 체크박스 스타일 */
+        .checkbox-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checkbox-list li {
+            padding-left: 30px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-list li::before {
+            content: '☐';
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .checkbox-list li.checked::before {
+            content: '☑';
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .timeline {
+                padding-left: 30px;
+            }
+
+            .timeline::before {
+                left: 10px;
+            }
+
+            .timeline-item::before {
+                left: -28px;
+            }
+
+            .ai-tabs {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 1.2em;
+            }
+        }
+
+        /* 콘텐츠가 접혔을 때 */
+        .timeline-item.collapsed .timeline-content {
+            display: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div>
+                <h1>🧠 AI 협업 프로젝트 사고 기록</h1>
+                <p style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">컴퓨터공학 2학년 | 공익복무 중 기획 프로젝트</p>
+            </div>
+            <div class="external-links">
+                <a href="#" class="external-link" title="블로그">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                </a>
+                <a href="#" class="external-link" title="GitHub">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+                <a href="#" class="external-link" title="Instagram">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="timeline" id="timeline">
+            <!-- 타임라인 항목들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <h3>아직 기록이 없습니다</h3>
+            <p>첫 번째 사고 기록을 추가해보세요!</p>
+        </div>
+    </div>
+
+    <script>
+        // 샘플 데이터 (실제로는 JSON 파일이나 데이터베이스에서 불러옴)
+        const thinkingLogs = [
+            {
+                date: "2026.01.21",
+                projectTitle: "지역 관광 AI 큐레이션 시스템",
+                status: "오전 3시간 / 컨디션 양호 / 집중 모드",
+                aiRecords: {
+                    gemini: {
+                        problem: "왜 지역 관광 콘텐츠는 항상 천편일률적으로 느껴질까?",
+                        humanObservation: {
+                            discomfort: "관광지 소개를 봐도 '가보고 싶다'는 감정이 안 생김",
+                            userBlock: "정보는 많은데 '나한테 맞는 코스'를 만들기 어려움",
+                            intuition: "관광청 자료 = 정보 나열, 여행 블로거 = 개인 취향만"
+                        },
+                        aiRole: {
+                            requested: ["정리", "재구성", "시나리오 생성"],
+                            wellDone: "여행 성향 분석 프레임워크 제안 (5가지 유형)",
+                            failed: "구체적인 지역 데이터 없이 추상적인 답변만"
+                        },
+                        decision: {
+                            adopted: "여행 성향 5가지 분류 체계는 채택",
+                            rejected: "AI가 제안한 '빅데이터 분석' 부분은 현실성 없어서 배제",
+                            nonExpertAdvantage: "오히려 비전공이라 '사용자 관점'에서 복잡한 기능 걷어냄"
+                        },
+                        conclusion: {
+                            current: "사용자 성향 입력 → AI가 코스 생성하는 단순 구조로 가자",
+                            uncertain: "지역 데이터를 어디서 확보할지 아직 모호함",
+                            nextQuestion: "공공데이터포털에 관광지 API가 실제로 쓸 만한가?"
+                        },
+                        failures: {
+                            blocked: "Gemini가 제안한 '실시간 날씨 연동'은 지자체 공모전 범위 벗어남",
+                            abandoned: "VR/AR 투어 아이디어 → 기술적으로 너무 무거움",
+                            mightReuse: "지역 축제 일정 자동 연동 기능은 나중에 써먹을 수도"
+                        },
+                        memo: {
+                            paper: "스케치북에 사용자 여정 맵 그림 (사진 첨부 예정)",
+                            keywords: ["관광 큐레이션", "성향 분석", "공공데이터", "단순함"]
+                        }
+                    },
+                    chatgpt: {
+                        problem: "관광 콘텐츠에서 '신뢰'는 어떻게 만들어질까?",
+                        humanObservation: {
+                            discomfort: "AI 추천이라고 하면 사람들이 의심부터 함",
+                            userBlock: "블로거 후기는 믿는데, AI 생성 콘텐츠는 왜 안 믿을까?",
+                            intuition: "'진짜 다녀온 사람 이야기'처럼 보여야 함"
+                        },
+                        aiRole: {
+                            requested: ["스토리텔링", "카피라이팅"],
+                            wellDone: "관광지별 '스토리 각색' 예시 10개 생성",
+                            failed: "너무 문학적이어서 현실감 없음"
+                        },
+                        decision: {
+                            adopted: "스토리 구조는 가져가되, 톤앤매너는 내가 수정",
+                            rejected: "ChatGPT가 만든 문장 대부분 버림 (너무 과장됨)",
+                            nonExpertAdvantage: "마케팅 전공 아니니까 오히려 '진짜 말투'로 쓸 수 있음"
+                        },
+                        conclusion: {
+                            current: "AI는 초안 생성, 나는 '사람 말투'로 다듬는 역할",
+                            uncertain: "이게 진짜 신뢰를 만들 수 있을까?",
+                            nextQuestion: "실제 사용자 테스트 필요 (공익 동기들한테 먼저 보여주기)"
+                        },
+                        failures: {
+                            blocked: "ChatGPT가 제안한 '챗봇 캐릭터' 아이디어 → 너무 유치함",
+                            abandoned: "감정 분석 기반 추천 → 과하다고 판단",
+                            mightReuse: "지역 방언 톤앤매너는 나중에 차별화 요소로 쓸 수도"
+                        },
+                        memo: {
+                            paper: "ChatGPT 생성 문장 vs 내가 수정한 문장 비교표 작성",
+                            keywords: ["신뢰", "스토리텔링", "톤앤매너", "사용자 테스트"]
+                        }
+                    },
+                    claude: {
+                        problem: "데이터 분석과 사용자 경험, 둘 다 잡을 수 있을까?",
+                        humanObservation: {
+                            discomfort: "데이터는 객관적이지만 재미없고, 스토리는 재밌지만 근거 없음",
+                            userBlock: "두 가지 모두 원하는 사용자를 만족시킬 수 있을까?",
+                            intuition: "균형이 핵심이다"
+                        },
+                        aiRole: {
+                            requested: ["논리 검증", "구조 설계"],
+                            wellDone: "데이터 분석 + 스토리텔링 결합 프레임워크 제안",
+                            failed: "여전히 추상적이고 구체적인 실행 방법은 약함"
+                        },
+                        decision: {
+                            adopted: "2단계 접근 채택: 1) 데이터로 신뢰 확보 → 2) 스토리로 감성 자극",
+                            rejected: "Claude가 제안한 복잡한 데이터 시각화는 배제 (과함)",
+                            nonExpertAdvantage: "복잡한 통계 없이도 '핵심 수치 3개'만 보여주면 된다고 판단"
+                        },
+                        conclusion: {
+                            current: "심플한 데이터 (방문자 수, 만족도, 재방문율) + 짧은 스토리",
+                            uncertain: "이 조합이 정말 효과적일지는 테스트 필요",
+                            nextQuestion: "지자체 담당자는 어떤 지표를 중요하게 볼까?"
+                        },
+                        failures: {
+                            blocked: "Claude가 제안한 '다변량 분석' → 필요 없다고 판단",
+                            abandoned: "여러 AI 모델 앙상블 아이디어 → 과잉 기술",
+                            mightReuse: "심층 분석 보고서 양식은 최종 제출 때 쓸 수도"
+                        },
+                        memo: {
+                            paper: "데이터 vs 스토리 균형점 찾기 다이어그램",
+                            keywords: ["균형", "단순함", "핵심 지표", "사용자 테스트"]
+                        }
+                    }
+                }
+            },
+            {
+                date: "2026.01.20",
+                projectTitle: "프로젝트 주제 선정 단계",
+                status: "저녁 2시간 / 컨디션 보통 / 아이디어 브레인스토밍",
+                aiRecords: {
+                    gemini: {
+                        problem: "지자체 공모전에서 실제로 원하는 게 뭘까?",
+                        humanObservation: {
+                            discomfort: "공모전 공고문이 너무 추상적임",
+                            userBlock: "'지역 문제 해결'이라는 말이 너무 광범위함",
+                            intuition: "실무자들은 '바로 써먹을 수 있는 것'을 원할 듯"
+                        },
+                        aiRole: {
+                            requested: ["요약", "재구성"],
+                            wellDone: "과거 수상작 패턴 분석 (3가지 유형 분류)",
+                            failed: "구체적인 차별화 전략은 제시 못함"
+                        },
+                        decision: {
+                            adopted: "수상작 유형 분류는 참고",
+                            rejected: "'기술 혁신'보다 '실용성' 중심으로 가기로 결정",
+                            nonExpertAdvantage: "오히려 기술에 안 빠지니까 사용자 관점 유지 가능"
+                        },
+                        conclusion: {
+                            current: "관광, 빈집, 특산물 중 하나로 좁히기",
+                            uncertain: "어느 주제가 가장 임팩트 있을지 모름",
+                            nextQuestion: "각 주제별 지자체 담당자 니즈는 뭘까?"
+                        },
+                        failures: {
+                            blocked: "Gemini가 제안한 '블록체인 활용' 아이디어 → 너무 과함",
+                            abandoned: "IoT 센서 기반 솔루션 → 하드웨어는 범위 벗어남",
+                            mightReuse: "공공데이터 활용 방법론은 어떤 주제든 쓸 수 있을 듯"
+                        },
+                        memo: {
+                            paper: "3가지 주제 비교표 작성 (장단점)",
+                            keywords: ["지자체 니즈", "실용성", "주제 선정"]
+                        }
+                    },
+                    chatgpt: {
+                        problem: "AI 활용 70% 이상이라는 게 구체적으로 무슨 뜻일까?",
+                        humanObservation: {
+                            discomfort: "단순히 'API 호출'만 해도 AI 활용인가?",
+                            userBlock: "'진짜 AI 활용'과 '겉핥기 활용'의 경계가 모호함",
+                            intuition: "AI가 핵심 의사결정에 관여해야 70%라고 할 수 있을 듯"
+                        },
+                        aiRole: {
+                            requested: ["정의", "기준 제시"],
+                            wellDone: "AI 활용 단계 구분 (5단계 프레임워크)",
+                            failed: "여전히 추상적이고 구체적인 예시 부족"
+                        },
+                        decision: {
+                            adopted: "AI가 '콘텐츠 생성, 데이터 분석, 추천'에 모두 관여하면 70% 인정",
+                            rejected: "ChatGPT가 제안한 '완전 자동화' 목표는 현실성 없음",
+                            nonExpertAdvantage: "오히려 '사람 검증'을 강조하는 게 차별화 포인트"
+                        },
+                        conclusion: {
+                            current: "AI 70% + 사람 30% (검증/판단) 구조 확립",
+                            uncertain: "이게 정말 차별화될지는 결과물 봐야 알 듯",
+                            nextQuestion: "사람 30%의 역할을 어떻게 명확히 보여줄까?"
+                        },
+                        failures: {
+                            blocked: "ChatGPT가 제안한 'AI가 모든 걸 결정' 방식 → 위험함",
+                            abandoned: "사람 역할 최소화 전략 → 오히려 역효과",
+                            mightReuse: "AI-Human 협업 구조 다이어그램은 발표 자료에 쓸 듯"
+                        },
+                        memo: {
+                            paper: "AI 활용 비율 계산 방법 정리",
+                            keywords: ["AI 활용도", "사람 역할", "협업 구조"]
+                        }
+                    },
+                    claude: {
+                        problem: "3-4개월 안에 정말 완성 가능한 범위는 어디까지일까?",
+                        humanObservation: {
+                            discomfort: "아이디어는 많은데 시간 제약이 명확함",
+                            userBlock: "공익 복무 중이라 하루 작업 시간이 제한적",
+                            intuition: "일정 관리가 성공의 핵심일 듯"
+                        },
+                        aiRole: {
+                            requested: ["일정 계획", "리스크 분석"],
+                            wellDone: "3-4개월 로드맵 제안 (단계별 마일스톤)",
+                            failed: "예상 작업 시간이 너무 낙관적임"
+                        },
+                        decision: {
+                            adopted: "4단계 로드맵 구조는 채택",
+                            rejected: "작업 시간은 Claude 제안의 1.5배로 현실화",
+                            nonExpertAdvantage: "완벽함보다 '완성'에 집중하기로 결정"
+                        },
+                        conclusion: {
+                            current: "MVP 중심 개발, 확장 기능은 시간 되면 추가",
+                            uncertain: "정말 4개월 안에 끝낼 수 있을까?",
+                            nextQuestion: "주간 단위 체크포인트를 어떻게 설정할까?"
+                        },
+                        failures: {
+                            blocked: "Claude가 제안한 '동시다발적 개발' → 현실적으로 불가능",
+                            abandoned: "A/B 테스트 계획 → 시간 부족",
+                            mightReuse: "여유 생기면 추가 기능 로드맵은 보관"
+                        },
+                        memo: {
+                            paper: "주간 작업 가능 시간 계산 (공익 복무 일정 고려)",
+                            keywords: ["일정 관리", "MVP", "현실화"]
+                        }
+                    }
+                }
+            }
+        ];
+
+        // 타임라인 렌더링
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            const emptyState = document.getElementById('emptyState');
+
+            if (thinkingLogs.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            thinkingLogs.forEach((log, index) => {
+                const item = createTimelineItem(log, index);
+                timeline.appendChild(item);
+            });
+        }
+
+        // 타임라인 아이템 생성
+        function createTimelineItem(log, index) {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.id = `log-${index}`;
+
+            item.innerHTML = `
+                <div class="date-header" onclick="toggleItem(${index})">
+                    <div class="date-info">
+                        <h2>${log.date}</h2>
+                        <div class="date-meta">${log.projectTitle} | ${log.status}</div>
+                    </div>
+                    <div class="toggle-icon">▼</div>
+                </div>
+
+                <div class="timeline-content">
+                    <div class="basic-info">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">📅 날짜:</span>
+                                <span>${log.date}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">📝 프로젝트:</span>
+                                <span>${log.projectTitle}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">⏰ 상태:</span>
+                                <span>${log.status}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ai-tabs">
+                        <button class="ai-tab active" onclick="switchTab(${index}, 'gemini')">Gemini</button>
+                        <button class="ai-tab" onclick="switchTab(${index}, 'chatgpt')">ChatGPT</button>
+                        <button class="ai-tab" onclick="switchTab(${index}, 'claude')">Claude</button>
+                    </div>
+
+                    ${createAITabContent(log, index, 'gemini', true)}
+                    ${createAITabContent(log, index, 'chatgpt', false)}
+                    ${createAITabContent(log, index, 'claude', false)}
+                </div>
+            `;
+
+            return item;
+        }
+
+        // AI 탭 콘텐츠 생성
+        function createAITabContent(log, logIndex, aiName, isActive) {
+            const aiData = log.aiRecords[aiName];
+            if (!aiData) return '';
+
+            return `
+                <div class="ai-tab-content ${isActive ? 'active' : ''}" id="log-${logIndex}-${aiName}">
+                    <!-- 1. 오늘 다룬 문제 -->
+                    <div class="section">
+                        <h3><span class="section-icon">❓</span>1. 오늘 다룬 문제</h3>
+                        <div class="section-content">
+                            <div class="highlight">
+                                <strong>오늘의 핵심 질문:</strong><br>
+                                ${aiData.problem}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 인간의 직관적 관찰 -->
+                    <div class="section">
+                        <h3><span class="section-icon">👁️</span>2. 인간의 직관적 관찰 (AI 쓰기 전)</h3>
+                        <div class="section-content">
+                            <p><strong>내가 느낀 불편함:</strong><br>${aiData.humanObservation.discomfort}</p>
+                            <p><strong>실제 사용자라면 막힐 지점:</strong><br>${aiData.humanObservation.userBlock}</p>
+                            <p><strong>감정/직관적으로 이상한 점:</strong><br>${aiData.humanObservation.intuition}</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. AI에게 맡긴 사고 영역 -->
+                    <div class="section">
+                        <h3><span class="section-icon">🤖</span>3. AI에게 맡긴 사고 영역 (AI 70%)</h3>
+                        <div class="section-content">
+                            <p><strong>AI에게 요청한 역할:</strong></p>
+                            <ul class="checkbox-list">
+                                ${aiData.aiRole.requested.map(role => `<li class="checked">${role}</li>`).join('')}
+                            </ul>
+                            <div class="success">
+                                <strong>✅ AI가 잘한 부분:</strong><br>
+                                ${aiData.aiRole.wellDone}
+                            </div>
+                            <div class="warning">
+                                <strong>❌ AI가 못한 부분:</strong><br>
+                                ${aiData.aiRole.failed}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 내가 내린 판단 -->
+                    <div class="section">
+                        <h3><span class="section-icon">⭐</span>4. 내가 내린 판단 (핵심 파트)</h3>
+                        <div class="section-content">
+                            <p><strong>✅ AI 제안 중 채택한 것:</strong><br>${aiData.decision.adopted}</p>
+                            <p><strong>❌ 버린 것 + 이유:</strong><br>${aiData.decision.rejected}</p>
+                            <p><strong>💡 전공자가 아니어서 오히려 가능했던 판단:</strong><br>${aiData.decision.nonExpertAdvantage}</p>
+                        </div>
+                    </div>
+
+                    <!-- 5. 오늘의 결론 -->
+                    <div class="section">
+                        <h3><span class="section-icon">📌</span>5. 오늘의 결론 (임시)</h3>
+                        <div class="section-content">
+                            <p><strong>오늘 도달한 결론 한 줄:</strong><br>${aiData.conclusion.current}</p>
+                            <p><strong>아직 확신 없는 부분:</strong><br>${aiData.conclusion.uncertain}</p>
+                            <p><strong>다음에 검증할 질문:</strong><br>${aiData.conclusion.nextQuestion}</p>
+                        </div>
+                    </div>
+
+                    <!-- 6. 실패 / 막힌 지점 기록 -->
+                    <div class="section">
+                        <h3><span class="section-icon">⚠️</span>6. 실패 / 막힌 지점 기록</h3>
+                        <div class="section-content">
+                            <p><strong>오늘 막힌 이유:</strong><br>${aiData.failures.blocked}</p>
+                            <p><strong>포기한 아이디어:</strong><br>${aiData.failures.abandoned}</p>
+                            <p><strong>다시 보면 쓸 수도 있을 것 같은 부분:</strong><br>${aiData.failures.mightReuse}</p>
+                        </div>
+                    </div>
+
+                    <!-- 7. 메모 -->
+                    <div class="section">
+                        <h3><span class="section-icon">📝</span>7. 메모 (종이에서 옮긴 흔적)</h3>
+                        <div class="section-content">
+                            <p><strong>종이에 적은 것 요약:</strong><br>${aiData.memo.paper}</p>
+                            <p><strong>떠오른 키워드:</strong><br>${aiData.memo.keywords.join(', ')}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 타임라인 아이템 토글
+        function toggleItem(index) {
+            const item = document.getElementById(`log-${index}`);
+            item.classList.toggle('collapsed');
+        }
+
+        // AI 탭 전환
+        function switchTab(logIndex, aiName) {
+            const item = document.getElementById(`log-${logIndex}`);
+            const tabs = item.querySelectorAll('.ai-tab');
+            const contents = item.querySelectorAll('.ai-tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            item.querySelector(`.ai-tab[onclick="switchTab(${logIndex}, '${aiName}')"]`).classList.add('active');
+            document.getElementById(`log-${logIndex}-${aiName}`).classList.add('active');
+        }
+
+        // 페이지 로드 시 타임라인 렌더링
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTimeline();
+        });
+    </script>
+</body>
+</html>
